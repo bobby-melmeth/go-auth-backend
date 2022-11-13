@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/bobbyMoonward/go-auth-backend/database"
 	"github.com/bobbyMoonward/go-auth-backend/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,6 +21,7 @@ func Register(c *fiber.Ctx) error {
 	}
 	password, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
 	user := models.User{
+		Id: uuid.NewString(),
 		FirstName: data["firstName"],
 		LastName: data["lastName"],
 		Email: data["email"],
@@ -38,22 +40,16 @@ func Login(c *fiber.Ctx) error {
 	var user  models.User
 
 	database.DB.Where("email = ?", data["email"]).First(&user)
-	if user.Id == 0 {
-		c.Status(fiber.StatusNotFound)
-		return c.JSON(fiber.Map{
-			"message": "user not found",
-		})
-	}
 
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"])); err != nil {
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
-			"message": "password incorrect",
+			"message": "Those details don't match any of our current records",
 		})
 	}
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Issuer: strconv.Itoa(int(user.Id)),
+		Issuer: user.Id,
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 	})
 
@@ -65,6 +61,7 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 	cookie := fiber.Cookie{
+
 		Name: "jwt",
 		Value: token,
 		Expires: time.Now().Add(time.Hour * 24),
