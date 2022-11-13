@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/bobbyMoonward/go-auth-backend/database"
@@ -12,7 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const SecretKey = "secret"
+var SecretKey = os.Getenv("SECRET_KEY")
 
 func Register(c *fiber.Ctx) error {
 	var data map[string]string
@@ -21,7 +23,7 @@ func Register(c *fiber.Ctx) error {
 	}
 	password, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
 	user := models.User{
-		Id: uuid.NewString(),
+		Id: uuid.New(),
 		FirstName: data["firstName"],
 		LastName: data["lastName"],
 		Email: data["email"],
@@ -49,7 +51,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Issuer: user.Id,
+		Issuer: strconv.Itoa(int(user.Id.ID())),
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 	})
 

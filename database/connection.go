@@ -26,5 +26,6 @@ import (
 
 	DB = db
 
-	db.AutoMigrate(&models.User{})
+	db.Migrator().CreateTable(models.User{})
+
 }

@@ -14,6 +14,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 	routes.Setup(app)
+	
 	app.Listen(":8000")
 
 
